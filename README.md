@@ -14,6 +14,12 @@
   <em>Live repository health, commit activity and issue throughput for any GitHub organization</em>
 </p>
 
+<p align="center">
+  <strong><a href="https://pulse-analytics-six.vercel.app">Live Demo</a></strong>
+</p>
+
+![Pulse demo](docs/demo.gif)
+
 ---
 
 ## What it demonstrates
