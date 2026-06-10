@@ -22,16 +22,23 @@ export class GithubApiError extends Error {
   }
 }
 
+function githubHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
+  return headers
+}
+
 async function githubFetch<Schema extends z.ZodType>(
   path: string,
   schema: Schema
 ): Promise<z.infer<Schema>> {
   const response = await fetch(`${GITHUB_API}${path}`, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
+    headers: githubHeaders(),
     next: { revalidate: REVALIDATE_SECONDS },
   })
 
@@ -78,11 +85,7 @@ export async function getRepoParticipation(
 ): Promise<Participation | null> {
   try {
     const response = await fetch(`${GITHUB_API}/repos/${fullName}/stats/participation`, {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
+      headers: githubHeaders(),
       next: { revalidate: REVALIDATE_SECONDS },
     })
     if (response.status !== 200) return null

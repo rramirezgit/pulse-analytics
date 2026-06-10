@@ -8,6 +8,8 @@ import { Skeleton } from '@/shared/ui/Skeleton'
 
 const DEFAULT_ORG = process.env.NEXT_PUBLIC_DEFAULT_ORG ?? 'tanstack'
 
+export const dynamic = 'force-dynamic'
+
 export default function OverviewPage() {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
