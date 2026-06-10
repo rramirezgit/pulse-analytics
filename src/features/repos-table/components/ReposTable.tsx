@@ -14,6 +14,7 @@ import {
 import { useReposQuery } from '../queries'
 import { repoColumns } from '../columns'
 import { Skeleton } from '@/shared/ui/Skeleton'
+import { WatchlistBar } from '@/features/watchlist/components/WatchlistBar'
 
 export function ReposTable({ org }: { org: string }) {
   const { data, isPending, isError, error } = useReposQuery(org)
@@ -23,6 +24,8 @@ export function ReposTable({ org }: { org: string }) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [simulateFailure, setSimulateFailure] = useState(false)
+  const [lastError, setLastError] = useState<string | null>(null)
 
   const table = useReactTable({
     data: data ?? [],
@@ -37,6 +40,7 @@ export function ReposTable({ org }: { org: string }) {
     getFilteredRowModel: getFilteredRowModel(),
     initialState: { columnPinning: { left: ['select', 'name'] } },
     getRowId: (repo) => String(repo.id),
+    meta: { watchlist: { simulateFailure, onError: setLastError } },
   })
 
   if (isPending) return <Skeleton className="h-96" />
@@ -52,6 +56,12 @@ export function ReposTable({ org }: { org: string }) {
 
   return (
     <div className="space-y-3">
+      <WatchlistBar
+        repos={data ?? []}
+        simulateFailure={simulateFailure}
+        onSimulateFailureChange={setSimulateFailure}
+        lastError={lastError}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="search"

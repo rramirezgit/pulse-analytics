@@ -1,8 +1,19 @@
 'use client'
 
-import { createColumnHelper } from '@tanstack/react-table'
+import { createColumnHelper, type RowData } from '@tanstack/react-table'
 import type { Repo } from '@/shared/api/schemas'
 import { formatCompact } from '@/features/overview/lib/aggregate'
+import { WatchStar } from '@/features/watchlist/components/WatchStar'
+
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TData extends RowData> {
+    watchlist: {
+      simulateFailure: boolean
+      onError: (message: string) => void
+    }
+  }
+}
 
 const columnHelper = createColumnHelper<Repo>()
 
@@ -35,6 +46,20 @@ export const repoColumns = [
         checked={row.getIsSelected()}
         onChange={row.getToggleSelectedHandler()}
         className="accent-violet-500"
+      />
+    ),
+  }),
+  columnHelper.display({
+    id: 'watch',
+    size: 40,
+    enableHiding: false,
+    header: () => <span aria-hidden>★</span>,
+    cell: ({ row, table }) => (
+      <WatchStar
+        repoId={row.original.id}
+        repoName={row.original.name}
+        simulateFailure={table.options.meta?.watchlist.simulateFailure ?? false}
+        onError={table.options.meta?.watchlist.onError ?? (() => {})}
       />
     ),
   }),
