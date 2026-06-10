@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/', label: 'Overview' },
   { href: '/repos', label: 'Repositories' },
   { href: '/issues', label: 'Issues' },
+  { href: '/stress', label: 'Stress Test' },
 ]
 
 export function Nav() {
