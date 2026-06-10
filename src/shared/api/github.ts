@@ -1,7 +1,13 @@
 import 'server-only'
 import type { z } from 'zod'
-import { orgSchema, repoListSchema, participationSchema } from './schemas'
-import type { Org, Repo, Participation } from './schemas'
+import {
+  orgSchema,
+  repoListSchema,
+  participationSchema,
+  issueListSchema,
+  issueDetailSchema,
+} from './schemas'
+import type { Org, Repo, Participation, Issue, IssueDetail, IssueState } from './schemas'
 
 const GITHUB_API = 'https://api.github.com'
 const REVALIDATE_SECONDS = 900
@@ -43,6 +49,28 @@ export async function getOrgRepos(org: string): Promise<Repo[]> {
   return repos
     .filter((repo) => !repo.fork && !repo.archived)
     .sort((a, b) => b.stargazers_count - a.stargazers_count)
+}
+
+export const ISSUES_PAGE_SIZE = 30
+
+export function getRepoIssues(
+  org: string,
+  repo: string,
+  state: IssueState,
+  page: number
+): Promise<Issue[]> {
+  const params = new URLSearchParams({
+    state,
+    per_page: String(ISSUES_PAGE_SIZE),
+    page: String(page),
+    sort: 'created',
+    direction: 'desc',
+  })
+  return githubFetch(`/repos/${org}/${repo}/issues?${params}`, issueListSchema)
+}
+
+export function getIssue(org: string, repo: string, number: number): Promise<IssueDetail> {
+  return githubFetch(`/repos/${org}/${repo}/issues/${number}`, issueDetailSchema)
 }
 
 export async function getRepoParticipation(

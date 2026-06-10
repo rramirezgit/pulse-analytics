@@ -32,6 +32,30 @@ export const participationSchema = z.object({
   owner: z.array(z.number()),
 })
 
+export const issueSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  html_url: z.string().url(),
+  state: z.enum(['open', 'closed']),
+  comments: z.number(),
+  created_at: z.string(),
+  user: z.object({ login: z.string(), avatar_url: z.string().url() }).nullable(),
+  labels: z.array(
+    z.object({ name: z.string().optional(), color: z.string().optional() }).loose()
+  ),
+  pull_request: z.object({}).loose().optional(),
+})
+
+export const issueListSchema = z.array(issueSchema)
+
+export const issueDetailSchema = issueSchema.extend({
+  body: z.string().nullable(),
+})
+
 export type Org = z.infer<typeof orgSchema>
 export type Repo = z.infer<typeof repoSchema>
 export type Participation = z.infer<typeof participationSchema>
+export type Issue = z.infer<typeof issueSchema>
+export type IssueDetail = z.infer<typeof issueDetailSchema>
+export type IssueState = 'open' | 'closed' | 'all'
