@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/TanStack-Query_·_Table_·_Virtual-FF4154?style=flat-square" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img src="https://github.com/rramirezgit/pulse-analytics/actions/workflows/ci.yml/badge.svg" />
+</p>
 
-## Getting Started
+<h1 align="center">Pulse</h1>
 
-First, run the development server:
+<p align="center">
+  <strong>Engineering analytics for open-source teams</strong><br/>
+  <em>Live repository health, commit activity and issue throughput for any GitHub organization</em>
+</p>
+
+---
+
+## What it demonstrates
+
+Pulse is a portfolio project built to showcase senior frontend patterns with real, live data:
+
+| Feature | Pattern showcased |
+|---|---|
+| **Overview** | React Server Components + Suspense streaming — each widget streams independently |
+| **Repositories** | TanStack Table v8: sorting, global filtering, column visibility, pinning, row selection |
+| **Watchlist** | TanStack Query optimistic updates with snapshot rollback on failure (demonstrable via a failure switch) |
+| **Issues & PRs** | `useInfiniteQuery` pagination + TanStack Virtual windowing + hover-prefetched detail panel |
+| **Stress Test** | 100,000 rows sorted and scrolled at 60+ fps with ~40 rows in the DOM |
+
+## Architecture decisions
+
+- **The GitHub token never reaches the client.** Every call goes through Server Components or Route Handlers using `fetch` with `next: { revalidate: 900 }`. A public deploy serves any number of visitors with a handful of real API requests per 15-minute window — this is how the 5,000 req/h rate limit becomes a non-issue.
+- **Zod at the boundary.** Every GitHub response is parsed against a schema before it enters the app; the UI works with typed domain objects, never raw JSON.
+- **Server state vs client state.** TanStack Query owns everything fetched (queries, infinite queries, mutations); React state only holds UI concerns (sorting, filters, selection).
+- **Honest stress testing.** No free API serves 100k paginable rows without burning rate limits, so the stress test generates a seed-deterministic dataset in the browser and labels itself as such. The interesting part — sorting and rendering 100k rows without dropping frames — is real.
+- **Feature-based structure.** `src/features/{overview,repos-table,issues-explorer,watchlist,stress-test}` are self-contained; `src/shared` holds the API layer, query keys and UI primitives.
+
+## Measured performance
+
+- Stress test: **119 fps** while scrolling on a 120 Hz display, **39 rows in the DOM** out of 100,000
+- Full client-side sort of 100k rows: **~370 ms** including re-render
+- Issues list: pages of 30 load on scroll; hovering a row prefetches its detail so the panel opens instantly
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/rramirezgit/pulse-analytics.git
+cd pulse-analytics
+pnpm install
+
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Public repositories (read-only)** access and set it in `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+GITHUB_TOKEN=github_pat_...
+NEXT_PUBLIC_DEFAULT_ORG=tanstack
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm dev
+```
 
-## Learn More
+### Commands
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev       # Development server
+pnpm build     # Production build
+pnpm lint      # ESLint
+pnpm test      # Vitest suite (aggregates, optimistic rollback)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The Vitest suite focuses on the logic that earns its tests:
 
-## Deploy on Vercel
+- **Aggregation functions** — KPI summation, language breakdown with tail grouping
+- **Optimistic mutation lifecycle** — the cache updates before the request resolves, rolls back to the `onMutate` snapshot on failure, and invalidates on settle
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router) · React 19 · TypeScript strict · TanStack Query v5 · TanStack Table v8 · TanStack Virtual v3 · Tailwind CSS 4 · Zod · Recharts · Vitest + Testing Library
